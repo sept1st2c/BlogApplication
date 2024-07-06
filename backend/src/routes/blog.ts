@@ -13,12 +13,16 @@ export const blogRouter = new Hono<{
   };
 }>();
 
+//
+
+///
+
 blogRouter.use("/*", async (c, next) => {
   const authHeader = c.req.header("authorization") || "";
   const user = await verify(authHeader, c.env.JWT_SECRET);
 
   if (user) {
-    c.set("userId", user.id);
+    c.set("userId", user.id as string);
     next();
   } else {
     return c.json({
@@ -27,9 +31,13 @@ blogRouter.use("/*", async (c, next) => {
   }
 });
 
+//
+
+//
+
 blogRouter.post("/", async (c) => {
   const body = await c.req.json();
-
+  const userId = c.get("userId");
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
@@ -38,7 +46,7 @@ blogRouter.post("/", async (c) => {
     data: {
       title: body.title,
       content: body.content,
-      authorId: "1",
+      authorId: userId,
     },
   });
 
