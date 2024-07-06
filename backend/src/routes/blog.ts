@@ -23,7 +23,7 @@ blogRouter.use("/*", async (c, next) => {
 
   if (user) {
     c.set("userId", user.id as string);
-    next();
+    await next();
   } else {
     return c.json({
       message: "not logged in",
@@ -41,18 +41,21 @@ blogRouter.post("/", async (c) => {
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
+  try {
+    const blog = await prisma.post.create({
+      data: {
+        title: body.title,
+        content: body.content,
+        authorId: userId,
+      },
+    });
 
-  const blog = await prisma.post.create({
-    data: {
-      title: body.title,
-      content: body.content,
-      authorId: userId,
-    },
-  });
-
-  return c.json({
-    id: blog.id,
-  });
+    return c.json({
+      id: blog.id,
+    });
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 blogRouter.put("/", async (c) => {
@@ -79,8 +82,29 @@ blogRouter.put("/", async (c) => {
   // return c.text("signin route");
 });
 
-blogRouter.get("/", async (c) => {
-  const body = await c.req.json();
+//pagination
+
+blogRouter.get("/bulk", async (c) => {
+  //const body = await c.req.json();
+
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const blogs = await prisma.post.findMany({});
+  //console.log(c.json(blogs));
+
+  return c.json({ blogs });
+});
+//
+
+//
+
+//
+
+//
+blogRouter.get("/:id", async (c) => {
+  const id = c.req.param("id");
 
   const prisma = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
@@ -89,7 +113,7 @@ blogRouter.get("/", async (c) => {
   try {
     const blog = await prisma.post.findFirst({
       where: {
-        id: body.id,
+        id: id,
       },
     });
 
@@ -103,20 +127,4 @@ blogRouter.get("/", async (c) => {
       message: "error while fetching ig",
     });
   }
-});
-
-//pagination
-
-blogRouter.get("/bulk", async (c) => {
-  const body = await c.req.json();
-
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
-  const blogs = prisma.post.findMany();
-
-  return c.json({
-    blogs,
-  });
 });

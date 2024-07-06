@@ -34,7 +34,7 @@ userRouter.post("/signup", async (c) => {
       },
       c.env.JWT_SECRET
     );
-    return c.text("jwt here:" + jwt);
+    return c.text("jwt here: " + jwt);
   } catch (e) {
     console.log(e);
     c.status(411);
@@ -67,7 +67,7 @@ userRouter.post("/signin", async (c) => {
       },
       c.env.JWT_SECRET
     );
-    return c.text("jwt here" + jwt);
+    return c.text("jwt here " + jwt);
   } catch (e) {
     console.log(e);
     c.status(411);
